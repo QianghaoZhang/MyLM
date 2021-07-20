@@ -9,6 +9,9 @@ from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
 from tqdm import tqdm
 torch.manual_seed(1)
+
+from examples.token_classifcation import LayoutLMv2ForTokenClassification
+
 class LanguageModeler(nn.Module):
     def __init__(self,config):
         super(LanguageModeler,self).__init__()
@@ -27,12 +30,17 @@ class LanguageModeler(nn.Module):
 class SimpleCustomBatch:
     def __init__(self, data):
         transposed_data = list(zip(*data))
-        self.inp = torch.stack(transposed_data[0], 0)
-        self.tgt = torch.stack(transposed_data[1], 0)
+        self.bbox = torch.stack(transposed_data[0], 0)
+        self.image = torch.stack(transposed_data[1],0)
+        self.input_ids = torch.stack(transposed_data[2],0)
+        self.tgt = torch.stack(transposed_data[3], 0)
 
     # custom memory pinning method on custom type
     def pin_memory(self):
-        self.inp = self.inp.pin_memory()
+        self.bbox = self.bbox.pin_memory()
+        self.image=self.image.pin_memory()
+        self.input_ids=self.input_ids.pin_memory()
+
         self.tgt = self.tgt.pin_memory()
         return self
 def collate_wrapper(batch):
@@ -40,19 +48,31 @@ def collate_wrapper(batch):
 
 
 if __name__=="__main__":
+
     with open("/mnt/data/competition/pythonProject/pythonProject/layoutlmv2/funds_data/trained_data/bbox.txt",'r',encoding="utf-8") as fr:
         bbox_data = fr.read()
+    with open("/mnt/data/competition/pythonProject/pythonProject/layoutlmv2/funds_data/trained_data/image.txt",'r',encoding="utf-8") as fr:
+        image_data = fr.read()
+    with open("/mnt/data/competition/pythonProject/pythonProject/layoutlmv2/funds_data/trained_data/input_ids.txt",'r',encoding="utf-8") as fr:
+        input_ids_data = fr.read()
+    with open("/mnt/data/competition/pythonProject/pythonProject/layoutlmv2/funds_data/trained_data/token_type_ids.txt",'r',encoding="utf-8") as fr:
+        token_type_ids_data = fr.read()
     with open("/mnt/data/competition/pythonProject/pythonProject/layoutlmv2/funds_data/trained_data/labels.txt",'r',encoding="utf-8") as fr:
         labels_data = fr.read()
-    inps = torch.tensor(eval(bbox_data))
+    bbox = torch.tensor(eval(bbox_data))
+    images = torch.tensor(eval(image_data))
+    input_ids = torch.tensor(eval(input_ids_data))
     tgts = torch.tensor(eval(labels_data))
-
-    dataset = TensorDataset(inps,tgts)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    dataset = TensorDataset(bbox,images,input_ids,tgts)
     loader = DataLoader(dataset, batch_size=2, collate_fn=collate_wrapper,
                         pin_memory=True)
 
     loss_function = nn.NLLLoss()
-    model = LanguageModeler(config)
+
+    model = LayoutLMv2ForTokenClassification(config)
+    # model=LanguageModeler(config)
+    # model.to(device)
     optimizer = optim.SGD(model.parameters(),lr = 0.01)
     losses = []
     for epoch in range(2):
@@ -60,12 +80,15 @@ if __name__=="__main__":
 
         for batch in tqdm(loader):
             model.zero_grad()
-            log_probs = model(batch.inp)
-            loss = loss_function(log_probs,batch.tgt)
+            log_probs = model(input_ids=batch.input_ids,bbox=batch.bbox,image=batch.image)
+            # log_probs = model(bbox=batch.bbox)
 
-            loss.backward()
-            optimizer.step()
-
-            total_loss+=loss.item()
-        losses.append(total_loss)
-    print(losses)
+            print(log_probs)
+    #         loss = loss_function(log_probs,batch.tgt)
+    #
+    #         loss.backward()
+    #         optimizer.step()
+    #
+    #         total_loss+=loss.item()
+    #     losses.append(total_loss)
+    # print(losses)

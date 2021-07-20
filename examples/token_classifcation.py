@@ -1,21 +1,24 @@
 import torch.nn as nn
-from model import LayoutLMv2Model
+from model.LayoutLMv2Model import LayoutLMv2Model
 from transformers.modeling_outputs import (
     BaseModelOutputWithPastAndCrossAttentions,
     BaseModelOutputWithPoolingAndCrossAttentions,
     TokenClassifierOutput,
 )
 from torch.nn import CrossEntropyLoss
+
+
+
 class LayoutLMv2ForTokenClassification(nn.Module):
 
     def __init__(self, config):
-        super().__init__(config)
+        super().__init__()
         self.num_labels = config.num_labels
         self.layoutlmv2 = LayoutLMv2Model(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classifier = nn.Linear(config.hidden_size, config.num_labels)
 
-        self.init_weights()
+        # self.init_weights()
 
     def get_input_embeddings(self):
         return self.layoutlmv2.embeddings.word_embeddings
@@ -35,7 +38,8 @@ class LayoutLMv2ForTokenClassification(nn.Module):
         output_hidden_states=None,
         return_dict=None,
     ):
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        # return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = return_dict
 
         outputs = self.layoutlmv2(
             input_ids=input_ids,

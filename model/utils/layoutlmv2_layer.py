@@ -4,8 +4,8 @@ import math
 from transformers.modeling_utils import apply_chunking_to_forward, find_pruneable_heads_and_indices, prune_linear_layer
 import torch.nn.functional as F
 from model.attention.layoutlmv2_self_attention import LayoutLMv2Attention
-from layoutlmv2_intermediate import LayoutLMv2Intermediate
-from layoutlmv2_output import LayoutLMv2Output
+from model.utils.layoutlmv2_intermediate import LayoutLMv2Intermediate
+from model.utils.layoutlmv2_output import LayoutLMv2Output
 class LayoutLMv2Layer(nn.Module):
     def __init__(self, config):
         super().__init__()

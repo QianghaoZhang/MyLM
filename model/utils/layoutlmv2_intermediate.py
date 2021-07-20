@@ -1,6 +1,6 @@
 
 import torch.nn as nn
-from activations import ACT2FN
+from model.utils.activations import ACT2FN
 class LayoutLMv2Intermediate(nn.Module):
     def __init__(self, config):
         super().__init__()

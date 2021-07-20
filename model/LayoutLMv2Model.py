@@ -1,15 +1,19 @@
 import torch
 import torch.utils.checkpoint
 import torch.nn as nn
-from embedding.layoutlmv2 import LayoutLMv2Embeddings
-from model.visual_backbone import VisualBackbone
-from encoder.layoutlmv2_encoder import LayoutLMv2Encoder
-from encoder.layoutlmv2_pool import LayoutLMv2Pooler
-from utils.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
+from model.embedding.layoutlmv2 import LayoutLMv2Embeddings
+from model.visual_backbone.VisualBackbone import VisualBackbone
+from model.encoder.layoutlmv2_encoder import LayoutLMv2Encoder
+from model.encoder.layoutlmv2_pool import LayoutLMv2Pooler
+from transformers.modeling_outputs import (
+    BaseModelOutputWithPastAndCrossAttentions,
+    BaseModelOutputWithPoolingAndCrossAttentions,
+    TokenClassifierOutput,
+)
 
-class LayoutLMv2Model(nn.module):
+class LayoutLMv2Model(nn.Module):
     def __init__(self, config):
-        super(LayoutLMv2Model, self).__init__(config)
+        super(LayoutLMv2Model, self).__init__()
         self.config = config
         self.has_visual_segment_embedding = config.has_visual_segment_embedding
         self.embeddings = LayoutLMv2Embeddings(config)
@@ -24,7 +28,7 @@ class LayoutLMv2Model(nn.module):
         self.encoder = LayoutLMv2Encoder(config)
         self.pooler = LayoutLMv2Pooler(config)
 
-        self.init_weights()
+        # self.init_weights()
 
     def get_input_embeddings(self):
         return self.embeddings.word_embeddings
@@ -84,12 +88,16 @@ class LayoutLMv2Model(nn.module):
         output_hidden_states=None,
         return_dict=None,
     ):
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        # output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_attentions = output_attentions
+        # output_hidden_states = (
+        #     output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        # )
         output_hidden_states = (
-            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+            output_hidden_states
         )
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-
+        # return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = return_dict
         if input_ids is not None and inputs_embeds is not None:
             raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
@@ -178,7 +186,7 @@ class LayoutLMv2Model(nn.module):
 
         extended_attention_mask = final_attention_mask.unsqueeze(1).unsqueeze(2)
 
-        extended_attention_mask = extended_attention_mask.to(dtype=self.dtype)
+        extended_attention_mask = extended_attention_mask.to(dtype=torch.long)
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
 
         if head_mask is not None:
