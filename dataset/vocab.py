@@ -1,7 +1,7 @@
 import pickle
 import tqdm
 from collections import Counter
-
+import json
 
 class TorchVocab(object):
     """Defines a vocabulary object that will be used to numericalize a field.
@@ -120,14 +120,15 @@ class WordVocab(Vocab):
     def __init__(self, texts, max_size=None, min_freq=1):
         print("Building Vocab")
         counter = Counter()
-        for line in tqdm.tqdm(texts):
-            if isinstance(line, list):
-                words = line
-            else:
-                words = line.replace("\n", "").replace("\t", "").split()
+        data  = json.load(texts)
+        line = data["tokens"]
+        if isinstance(line, list):
+            words = line
+        else:
+            words = line.replace("\n", "").replace("\t", "").split()
 
-            for word in words:
-                counter[word] += 1
+        for word in words:
+            counter[word] += 1
         super().__init__(counter, max_size=max_size, min_freq=min_freq)
 
     def to_seq(self, sentence, seq_len=None, with_eos=False, with_sos=False, with_len=False):
@@ -171,8 +172,8 @@ def build():
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--corpus_path", required=True, type=str)
-    parser.add_argument("-o", "--output_path", required=True, type=str)
+    parser.add_argument("-c", "--corpus_path", default="/mnt/data/competition/pythonProject/pythonProject/layoutlmv2/funds_data/extracted_data/00040534.json", type=str)
+    parser.add_argument("-o", "--output_path", default="/mnt/data/competition/pythonProject/pythonProject/layoutlmv2/funds_data/pretrained_data/vocab.pkl", type=str)
     parser.add_argument("-s", "--vocab_size", type=int, default=None)
     parser.add_argument("-e", "--encoding", type=str, default="utf-8")
     parser.add_argument("-m", "--min_freq", type=int, default=1)
@@ -183,3 +184,11 @@ def build():
 
     print("VOCAB SIZE:", len(vocab))
     vocab.save_vocab(args.output_path)
+
+
+if __name__=="__main__":
+    build()
+
+    # f=open("/mnt/data/competition/pythonProject/pythonProject/layoutlmv2/funds_data/pretrained_data/vocab.pkl",'rb')
+    # bb = pickle.load(f)
+    # print(bb.sos_index)
