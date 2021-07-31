@@ -1,7 +1,7 @@
 import torch
 
-from detectron2.data.detection_utils import read_image
-from detectron2.data.transforms import ResizeTransform, TransformList
+from image_utils.read_img import read_image
+from image_utils.transforms import ResizeTransform, TransformList
 
 
 def normalize_bbox(bbox, size):
