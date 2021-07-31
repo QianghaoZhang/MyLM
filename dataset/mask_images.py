@@ -2,6 +2,7 @@ from PIL import Image
 import numpy as np
 import torch
 def mask_img(img_path):
+
     img_pil=Image.open(img_path)
     img_pil_arr = np.array(img_pil)
     img_tensor = torch.tensor(img_pil_arr)
